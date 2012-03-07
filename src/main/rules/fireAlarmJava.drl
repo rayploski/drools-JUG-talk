@@ -1,0 +1,52 @@
+import java.util.*
+import com.jboss.advocacy.model.*
+
+rule "When there is a fire turn on the sprinkler"
+dialect "java"
+when
+    $fire: Fire($roomA_ : room)
+    $sprinklerA_ : Sprinkler( room == $roomA_, on == false )
+then
+    modify( $sprinklerA_ ) { setOn( true ) };
+    System.out.println( "Turn on the sprinkler for room " + $roomA_.getName() );
+    System.out.println( $fire );
+end
+
+rule "When the fire is gone turn off the sprinkler"
+dialect "java"
+when
+    $roomB_ : Room( )
+    $sprinklerB_ : Sprinkler( room == $roomB_, on == true )
+    not Fire( room == $roomB_ )
+then
+    modify( $sprinklerB_ ) { setOn( false ) };
+    System.out.println( "Turn off the sprinkler for room " + $roomB_.getName() );
+end
+
+rule "Raise the alarm when we have one or more fires"
+dialect "java"
+when
+    exists Fire()
+then
+    insert( new Alarm() );
+    System.out.println( "Raise the alarm" );
+end
+
+rule "Cancel the alarm when all the fires have gone"
+dialect "java"
+when
+    not Fire()
+    $alarm_ : Alarm()
+then
+    retract( $alarm_ );
+    System.out.println( "Cancel the alarm" );
+end
+
+rule "Status output when things are ok"
+dialect "java"
+when
+    not Alarm()
+    not Sprinkler( on == true )
+then
+    System.out.println( "Everything is ok" );
+end
